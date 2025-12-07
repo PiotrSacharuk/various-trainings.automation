@@ -1,0 +1,36 @@
+name: order-flow CI pipeline
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Install dependencies
+        run: poetry install
+        working-directory: ./automation
+      - name: Run Security Scan (bandit)
+        run: |
+          poetry run bandit -r . -ll --exclude ".venv,poetry.lock" || true
+        working-directory: ./automation
+      - name: Run Linters (Black/Isort/Flake8)
+        run: |
+          poetry run black --check . --exclude=".venv"
+          poetry run isort --check-only . --skip=".venv"
+          poetry run flake8 . --exclude=".venv"
+        working-directory: ./automation

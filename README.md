@@ -1,0 +1,49 @@
+# 🚀 Automation Maestro Capstone: E-Commerce Microservice
+
+A production-ready Python microservice built to demonstrate modern DevOps practices, including "Shift Left" security, GitOps, and Autoscaling.
+
+## 📋 Project Roadmap & Status
+
+### Phase 1: Foundations & Hygiene ✅
+- [x] **Project Initialization**: Repository setup with standard structure.
+- [x] **Pre-commit Hooks**:
+  - [x] `detect-secrets` to prevent credential leaks.
+  - [x] `check-yaml`, `trailing-whitespace`, `end-of-file-fixer` for code hygiene.
+- [x] **Commitlint**: Enforcing Conventional Commits (e.g., `feat:`, `fix:`, `chore:`).
+
+### Phase 2: CI & Security ✅
+- [x] **GitHub Actions Pipeline**: Workflow for CI/CD configured.
+- [x] **Dependency Management**: Poetry integrated into CI pipeline.
+- [x] **Static Analysis (SAST)**:
+  - [x] `bandit` security scanning running in CI.
+  - [x] `black`, `isort`, `flake8` linters validating code quality.
+- [ ] **Docker Build**: Automated image creation.
+- [ ] **Image Security**: Scanning container images with Trivy.
+
+### Phase 3: Packaging (Helm) ⏳
+- [ ] Create a reusable Helm Chart.
+- [ ] Parameterize values for different environments (dev/prod).
+
+### Phase 4: GitOps (ArgoCD) ⏳
+- [ ] Setup GitOps configuration repository.
+- [ ] Install ArgoCD on Kubernetes.
+- [ ] Implement automated sync between Git and Cluster.
+
+### Phase 5: Safe Deployment Strategy ⏳
+- [ ] Install Argo Rollouts.
+- [ ] Implement Canary Release strategy (traffic splitting).
+
+### Phase 6: Scalability & Reliability ⏳
+- [ ] Configure Horizontal Pod Autoscaler (HPA).
+- [ ] Stress test the application to verify autoscaling.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Language**: Python 3.10+ (Poetry)
+- **CI/CD**: GitHub Actions
+- **Infrastructure**: Kubernetes (Minikube/K3s)
+- **GitOps**: ArgoCD
+- **Packaging**: Helm
+- **Observability**: Prometheus/Grafana (planned)
