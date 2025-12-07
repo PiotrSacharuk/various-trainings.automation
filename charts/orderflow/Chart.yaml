@@ -1,0 +1,6 @@
+apiVersion: v2
+name: orderflow
+description: A Helm chart for OrderFlow E-commerce Microservice
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
