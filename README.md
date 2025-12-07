@@ -17,8 +17,8 @@ A production-ready Python microservice built to demonstrate modern DevOps practi
 - [x] **Static Analysis (SAST)**:
   - [x] `bandit` security scanning running in CI.
   - [x] `black`, `isort`, `flake8` linters validating code quality.
-- [ ] **Docker Build**: Automated image creation.
-- [ ] **Image Security**: Scanning container images with Trivy.
+- [x] **Docker Build**: Automated image creation.
+- [x] **Image Security**: Scanning container images with Trivy.
 
 ### Phase 3: Packaging (Helm) ⏳
 - [ ] Create a reusable Helm Chart.

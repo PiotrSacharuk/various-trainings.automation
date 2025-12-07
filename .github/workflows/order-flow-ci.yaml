@@ -26,13 +26,14 @@ jobs:
         working-directory: ./automation
       - name: Run Security Scan (bandit)
         run: |
-          poetry run bandit -r . -ll --exclude ".venv,poetry.lock" || true
+          # Scan only project source to avoid scanning virtualenv and site-packages
+          poetry run bandit -r src -ll
         working-directory: ./automation
       - name: Run Linters (Black/Isort/Flake8)
         run: |
-          poetry run black --check . --exclude=".venv"
-          poetry run isort --check-only . --skip=".venv"
-          poetry run flake8 . --exclude=".venv"
+          poetry run black --check src --exclude=".venv"
+          poetry run isort --check-only src --skip=".venv"
+          poetry run flake8 src --exclude=".venv"
         working-directory: ./automation
 
   build-and-scan:

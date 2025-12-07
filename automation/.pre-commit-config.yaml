@@ -18,3 +18,29 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: [build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test]
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.2
+    hooks:
+      - id: bandit
+        args: ["-r", "src/", "app/", "-f", "json", "-o", "bandit-report.json"]
+        pass_filenames: false
+
+  - repo: https://github.com/psf/black
+    rev: 25.11.0
+    hooks:
+      - id: black
+        language_version: python3.10
+        args: ["--target-version", "py310"]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 7.0.0
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=88, --extend-ignore=E203]
