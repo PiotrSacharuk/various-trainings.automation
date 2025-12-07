@@ -34,3 +34,27 @@ jobs:
           poetry run isort --check-only . --skip=".venv"
           poetry run flake8 . --exclude=".venv"
         working-directory: ./automation
+
+  build-and-scan:
+    needs: code-quality
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./automation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build Docker image
+        run: |
+          docker build -t order-flow:${{ github.sha }} .
+      - name: Scan Docker image for vulnerabilities
+        uses: aquasecurity/trivy-action@v0.33.1
+        with:
+          image-ref: order-flow:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: 'true'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
