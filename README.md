@@ -20,9 +20,9 @@ A production-ready Python microservice built to demonstrate modern DevOps practi
 - [x] **Docker Build**: Automated image creation.
 - [x] **Image Security**: Scanning container images with Trivy.
 
-### Phase 3: Packaging (Helm) ⏳
-- [ ] Create a reusable Helm Chart.
-- [ ] Parameterize values for different environments (dev/prod).
+### Phase 3: Packaging (Helm) ✅
+- [x] Create a reusable Helm Chart.
+- [x] Parameterize values for different environments (dev/prod).
 
 ### Phase 4: GitOps (ArgoCD) ⏳
 - [ ] Setup GitOps configuration repository.
