@@ -24,10 +24,11 @@ A production-ready Python microservice built to demonstrate modern DevOps practi
 - [x] Create a reusable Helm Chart.
 - [x] Parameterize values for different environments (dev/prod).
 
-### Phase 4: GitOps (ArgoCD) ⏳
-- [ ] Setup GitOps configuration repository.
-- [ ] Install ArgoCD on Kubernetes.
-- [ ] Implement automated sync between Git and Cluster.
+### Phase 4: GitOps (ArgoCD) ✅
+- [x] Setup GitOps configuration repository.
+- [x] Install ArgoCD on Kubernetes.
+- [x] Implement automated sync between Git and Cluster.
+   - [x] setup: https://github.com/PiotrSacharuk/various_trainings.gitops
 
 ### Phase 5: Safe Deployment Strategy ⏳
 - [ ] Install Argo Rollouts.
