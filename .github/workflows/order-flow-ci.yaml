@@ -1,5 +1,9 @@
 name: order-flow CI pipeline
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: [master]
