@@ -30,13 +30,13 @@ A production-ready Python microservice built to demonstrate modern DevOps practi
 - [x] Implement automated sync between Git and Cluster.
    - [x] setup: https://github.com/PiotrSacharuk/various_trainings.gitops
 
-### Phase 5: Safe Deployment Strategy ⏳
-- [ ] Install Argo Rollouts.
-- [ ] Implement Canary Release strategy (traffic splitting).
+### Phase 5: Safe Deployment Strategy ✅
+- [x] Install Argo Rollouts.
+- [x] Implement Canary Release strategy (traffic splitting).
 
-### Phase 6: Scalability & Reliability ⏳
-- [ ] Configure Horizontal Pod Autoscaler (HPA).
-- [ ] Stress test the application to verify autoscaling.
+### Phase 6: Scalability & Reliability ✅
+- [x] Configure Horizontal Pod Autoscaler (HPA).
+- [x] Stress test the application to verify autoscaling.
 
 ---
 
