@@ -94,3 +94,52 @@ jobs:
           docker tag order-flow:${{ github.sha }} $IMAGE_REPO:latest
           docker push $IMAGE_REPO:${{ github.sha }}
           docker push $IMAGE_REPO:latest
+
+  dast-scan:
+    needs: build-and-scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.PAT_TOKEN }}
+
+      - name: Set IMAGE_REPO
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          IMAGE_REPO="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/order-flow"
+          echo "IMAGE_REPO=$IMAGE_REPO" >> $GITHUB_ENV
+
+      - name: Pull Docker image
+        run: docker pull $IMAGE_REPO:${{ github.sha }}
+
+      - name: Start application container
+        run: |
+          docker run -d --name order-flow-container -p 8080:8080 -e FLASK_HOST=0.0.0.0 -e FLASK_PORT=8080 $IMAGE_REPO:${{ github.sha }}
+
+          echo "Waiting for application to start..."
+          for i in {1..10}; do
+            if curl -s http://localhost:8080/health > /dev/null; then
+              echo "Application is up!"
+              exit 0
+            fi
+            echo "Waiting..."
+            sleep 3
+          done
+
+          echo "Application failed to start within timeout"
+          docker logs order-flow-container
+          exit 1
+      - name: Run OWASP ZAP DAST Scan
+        uses: zaproxy/action-full-scan@v0.8.0
+        with:
+          target: 'http://localhost:8080'
+          rules_file_name: '.zap/rules.tsv'

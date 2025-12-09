@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Poetry
+.venv/
+venv/
+ENV/
+env/
+.poetry.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Security scanning artifacts
+bandit-report.json
+sbom.json
+sbom-*.json
+
+# Pre-commit
+.pre-commit-config.yaml.bak
