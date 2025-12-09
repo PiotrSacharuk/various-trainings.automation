@@ -1,0 +1,4 @@
+10036	IGNORE	(Server Leaks Version Information via "Server" HTTP Response Header Field)
+10055	IGNORE	(CSP: Failure to Define Directive with No Fallback)
+90004	IGNORE	(Insufficient Site Isolation Against Spectre Vulnerability)
+10049	IGNORE	(Content Cacheability / Non-Storable Content)
