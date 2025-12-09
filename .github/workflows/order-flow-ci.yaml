@@ -25,21 +25,26 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
+
       - name: Install dependencies
         run: poetry install
+
       - name: Run Security Scan (bandit)
         run: |
           # Scan only project source to avoid scanning virtualenv and site-packages
           poetry run bandit -r src -ll
+
       - name: Run Linters (Black/Isort/Flake8)
         run: |
           poetry run black --check src --exclude=".venv"
@@ -57,9 +62,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Build Docker image
         run: |
           docker build -t order-flow:${{ github.sha }} .
+
       - name: Scan Docker image for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
@@ -69,23 +76,27 @@ jobs:
           ignore-unfixed: 'true'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+
       - name: Generate SBOM with Syft
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
           syft order-flow:${{ github.sha }} -o json > sbom.json
           echo "SBOM generated successfully"
           ls -la sbom.json
+
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
         with:
           name: sbom
           path: sbom.json
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.PAT_TOKEN }}
+
       - name: Set IMAGE_REPO (lowercase owner)
         run: |
           OWNER="${{ github.repository_owner }}"
@@ -143,8 +154,13 @@ jobs:
           echo "Application failed to start within timeout"
           docker logs order-flow-container
           exit 1
+
       - name: Run OWASP ZAP DAST Scan
         uses: zaproxy/action-full-scan@v0.12.0
         with:
           target: 'http://localhost:8080'
           rules_file_name: '.zap/rules.tsv'
+
+      - name: Stop application container
+        if: always()
+        run: docker stop order-flow-container || true
