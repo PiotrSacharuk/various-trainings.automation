@@ -18,6 +18,15 @@ def health():
     return {"status": "healthy"}, 200
 
 
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=()"
+    response.headers["Server"] = "unknown"  # Obfuscate server info
+    return response
+
+
 if __name__ == "__main__":
     host = os.getenv("FLASK_HOST", "0.0.0.0")  # nosec B104
     port = int(os.getenv("FLASK_PORT", "8080"))
