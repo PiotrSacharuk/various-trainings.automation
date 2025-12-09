@@ -144,7 +144,7 @@ jobs:
           docker logs order-flow-container
           exit 1
       - name: Run OWASP ZAP DAST Scan
-        uses: zaproxy/action-full-scan@v0.8.0
+        uses: zaproxy/action-full-scan@v0.12.0
         with:
           target: 'http://localhost:8080'
           rules_file_name: '.zap/rules.tsv'
