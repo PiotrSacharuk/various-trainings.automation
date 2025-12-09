@@ -181,58 +181,82 @@ CMD ["python", "src/main.py"]
 
 Pipeline w `ci.yaml` uruchamia się przy każdym Pull Requeście. Realizuje strategię "Defense in Depth".
 
-### Kluczowe sekcje pliku `.github/workflows/ci.yaml`
+### Kluczowe sekcje pliku `.github/workflows/order-flow-ci.yaml`
 
-#### A. Obsługa Monorepo
-Jeśli projekt jest w podfolderze (np. `automation/`), musimy wskazać ścieżki.
+#### A. Konfiguracja podstawowa
 
 ```yaml
 on:
   push:
-    paths: ['automation/**'] # Trigger tylko przy zmianach w folderze
-defaults:
-  run:
-    working-directory: ./automation # Domyślna ścieżka dla komend 'run'
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+  packages: write
 ```
 
 #### B. Job: Code Quality
-Sprawdza jakość kodu przed zbudowaniem.
+Sprawdza jakość kodu przed zbudowaniem (bandit, black, isort, flake8).
 
 ```yaml
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
       - name: Install dependencies
         run: poetry install
 
       # SAST - Security Scan
-      - name: Run Bandit
+      - name: Run Security Scan (bandit)
         run: poetry run bandit -r src -ll
 
       # Linters
-      - name: Check Formatting
-        run: poetry run black --check src
+      - name: Run Linters
+        run: |
+          poetry run black --check src
+          poetry run isort --check-only src
+          poetry run flake8 src
 ```
 
 #### C. Job: Build & Scan & Push
-Buduje obraz, skanuje go i wypycha do rejestru (GHCR).
+Buduje obraz Docker, skanuje go (Trivy), generuje SBOM i wypycha do GHCR.
 
 ```yaml
   build-and-scan:
-    needs: code-quality # Zależność!
+    needs: code-quality
+    runs-on: ubuntu-latest
     permissions:
-      packages: write # Uprawnienia do GHCR
+      packages: write
 
     steps:
-      - name: Build Docker
-        run: docker build -t myapp:${{ github.sha }} .
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Skanowanie obrazu na obecność CVE (Common Vulnerabilities and Exposures)
-      - name: Run Trivy Scanner
+      - name: Build Docker image
+        run: docker build -t order-flow:${{ github.sha }} .
+
+      # Skanowanie obrazu na CVE
+      - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'myapp:${{ github.sha }}'
+          image-ref: order-flow:${{ github.sha }}
           severity: 'CRITICAL,HIGH'
-          exit-code: '1' # Zablokuj pipeline, jeśli znajdziesz dziury!
+          exit-code: '1'
+
+      # SBOM (Software Bill of Materials)
+      - name: Generate SBOM with Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          syft order-flow:${{ github.sha }} -o json > sbom-${{ github.sha }}.json
 
       # Logowanie i Push do GHCR
       - name: Login to GHCR
@@ -242,8 +266,14 @@ Buduje obraz, skanuje go i wypycha do rejestru (GHCR).
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push
-        run: docker push ghcr.io/user/repo:${{ github.sha }}
+      - name: Push image to GHCR
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          IMAGE_REPO="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/order-flow"
+          docker tag order-flow:${{ github.sha }} $IMAGE_REPO:${{ github.sha }}
+          docker tag order-flow:${{ github.sha }} $IMAGE_REPO:latest
+          docker push $IMAGE_REPO:${{ github.sha }}
+          docker push $IMAGE_REPO:latest
 ```
 
 ---
