@@ -69,6 +69,7 @@ def metrics():
 
 
 @app.route("/error")
+@measure_metrics(endpoint="/error")
 def error():
     return {"error": "Internal Server Error"}, 500
 
