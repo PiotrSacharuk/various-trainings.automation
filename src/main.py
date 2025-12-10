@@ -33,14 +33,19 @@ def measure_metrics(endpoint):
             duration = time.time() - start_time
 
             status = 200
-            if isinstance(response, tuple):
-                status = response[1]
+            if isinstance(response, Response):
+                status = response.status_code
+            elif isinstance(response, tuple):
+                for item in response:
+                    if isinstance(item, int):
+                        status = item
+                        break
 
             request_duration.labels(method=request.method, endpoint=endpoint).observe(
                 duration
             )
             request_count.labels(
-                method=request.method, endpoint=endpoint, status=status
+                method=request.method, endpoint=endpoint, status=str(status)
             ).inc()
             return response
 
