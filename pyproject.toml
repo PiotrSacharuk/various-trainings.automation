@@ -18,6 +18,13 @@ dependencies = [
 [tool.poetry]
 package-mode = false
 
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+[tool.isort]
+profile = "black"
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

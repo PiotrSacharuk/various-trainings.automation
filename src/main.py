@@ -3,8 +3,8 @@ import time
 from functools import wraps
 
 from dotenv import load_dotenv
-from flask import Flask, request
-from prometheus_client import Counter, Histogram, generate_latest
+from flask import Flask, Response, request
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 load_dotenv()
 
@@ -65,7 +65,7 @@ def health():
 
 @app.route("/metrics")
 def metrics():
-    return generate_latest()
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 @app.after_request
