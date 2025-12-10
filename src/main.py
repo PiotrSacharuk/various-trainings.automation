@@ -1,21 +1,71 @@
 import os
+import time
+from functools import wraps
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, request
+from prometheus_client import Counter, Histogram, generate_latest
 
 load_dotenv()
 
 app = Flask(__name__)
 
+# Metrics
+request_count = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status"],
+)
+
+request_duration = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration",
+    ["method", "endpoint"],
+)
+
+
+def measure_metrics(endpoint):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            response = f(*args, **kwargs)
+            duration = time.time() - start_time
+
+            status = 200
+            if isinstance(response, tuple):
+                status = response[1]
+
+            request_duration.labels(method=request.method, endpoint=endpoint).observe(
+                duration
+            )
+            request_count.labels(
+                method=request.method, endpoint=endpoint, status=status
+            ).inc()
+            return response
+
+        return wrapper
+
+    return decorator
+
 
 @app.route("/")
+@measure_metrics(endpoint="/")
 def home():
+    time.sleep(0.01)
     return {"message": "order-flow microservice is running"}
 
 
 @app.route("/health")
+@measure_metrics(endpoint="/health")
 def health():
+    time.sleep(0.01)
     return {"status": "healthy"}, 200
+
+
+@app.route("/metrics")
+def metrics():
+    return generate_latest()
 
 
 @app.after_request
