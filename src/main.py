@@ -68,6 +68,11 @@ def metrics():
     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
+@app.route("/error")
+def error():
+    return {"error": "Internal Server Error"}, 500
+
+
 @app.after_request
 def add_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
