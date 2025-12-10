@@ -15,6 +15,9 @@ defaults:
   run:
     working-directory: .
 
+env:
+  FLASK_PORT: 5000
+
 jobs:
   code-quality:
     runs-on: ubuntu-latest
@@ -139,11 +142,11 @@ jobs:
 
       - name: Start application container
         run: |
-          docker run -d --name order-flow-container -p 8080:8080 -e FLASK_HOST=0.0.0.0 -e FLASK_PORT=8080 $IMAGE_REPO:${{ github.sha }}
+          docker run -d --name order-flow-container -p ${{ env.FLASK_PORT }}:${{ env.FLASK_PORT }} -e FLASK_HOST=0.0.0.0 -e FLASK_PORT=${{ env.FLASK_PORT }} $IMAGE_REPO:${{ github.sha }}
 
           echo "Waiting for application to start..."
           for i in {1..10}; do
-            if curl -s http://localhost:8080/health > /dev/null; then
+            if curl -s http://localhost:${{ env.FLASK_PORT }}/health > /dev/null; then
               echo "Application is up!"
               exit 0
             fi
@@ -158,7 +161,7 @@ jobs:
       - name: Run OWASP ZAP DAST Scan
         uses: zaproxy/action-full-scan@v0.12.0
         with:
-          target: 'http://localhost:8080'
+          target: 'http://localhost:${{ env.FLASK_PORT }}'
           rules_file_name: '.zap/rules.tsv'
 
       - name: Stop application container

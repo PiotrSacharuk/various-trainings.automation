@@ -14,7 +14,7 @@ RUN useradd -m appuser
 USER appuser
 
 ENV FLASK_HOST=0.0.0.0
-ENV FLASK_PORT=8080
+ENV FLASK_PORT=5000
 ENV FLASK_DEBUG=False
 
 CMD python -m flask --app src.main:app run --host=${FLASK_HOST} --port=${FLASK_PORT}
