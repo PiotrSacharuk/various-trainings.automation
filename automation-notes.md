@@ -253,10 +253,26 @@ Buduje obraz Docker, skanuje go (Trivy), generuje SBOM i wypycha do GHCR.
           exit-code: '1'
 
       # SBOM (Software Bill of Materials)
-      - name: Generate SBOM with Syft
+      - name: Install Syft
         run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-          syft order-flow:${{ github.sha }} -o json > sbom-${{ github.sha }}.json
+          VERSION="v1.36.0"
+          FILE="syft_${VERSION#v}_linux_amd64.tar.gz"
+
+          for i in 1 2 3; do
+            curl -sSfL -o syft.tgz "https://github.com/anchore/syft/releases/download/${VERSION}/${FILE}" && break
+            echo "Retry $i..."
+            sleep 3
+          done
+
+          tar -xzf syft.tgz
+          sudo install syft /usr/local/bin/syft
+          syft --version
+
+      - name: Generate SBOM
+        run: |
+          syft order-flow:${{ github.sha }} -o json > sbom.json
+          echo "SBOM generated successfully"
+          ls -la sbom.json
 
       # Logowanie i Push do GHCR
       - name: Login to GHCR
