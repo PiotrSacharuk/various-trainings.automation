@@ -254,3 +254,55 @@ jobs:
         with:
           name: changelog
           path: CHANGELOG.md
+
+  gitops-update:
+    needs: [build-and-scan, generate-release-notes]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v4
+        with:
+          repository: PiotrSacharuk/various_trainings.gitops
+          token: ${{ secrets.PAT_TOKEN }}
+          path: gitops
+
+      - name: Update Helm values with new image version
+        working-directory: gitops/orderflow
+        run: |
+          VERSION="${{ needs.build-and-scan.outputs.version }}"
+
+          echo "Updating values.yaml with version: $VERSION"
+
+          # Update image tag
+          sed -i "s/tag: \".*\"/tag: \"$VERSION\"/" values.yaml
+
+          echo "Changes:"
+          git diff values.yaml
+
+      - name: Commit and push to GitOps repo
+        working-directory: gitops
+        run: |
+          VERSION="${{ needs.build-and-scan.outputs.version }}"
+
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          # Check if there are changes
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git add orderflow/values.yaml
+          git commit -m "chore: Update order-flow to version ${VERSION}
+
+          Automated update from CI pipeline
+          Image: ghcr.io/piotrsacharuk/order-flow:${VERSION}
+          Trigger: ${{ github.sha }}"
+
+          git push origin master
+
+          echo "GitOps repo updated!"
