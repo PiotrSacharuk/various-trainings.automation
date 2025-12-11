@@ -145,17 +145,19 @@ jobs:
 
       - name: Push Docker image to GHCR with semantic version
         run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
           docker tag order-flow:${{ github.sha }} $IMAGE_REPO:${{ github.sha }}
-          docker tag order-flow:${{ github.sha }} $IMAGE_REPO:${{ steps.version.outputs.version }}
+          docker tag order-flow:${{ github.sha }} $IMAGE_REPO:${VERSION}
           docker tag order-flow:${{ github.sha }} $IMAGE_REPO:latest
 
           docker push $IMAGE_REPO:${{ github.sha }}
-          docker push $IMAGE_REPO:${{ steps.version.outputs.version }}
+          docker push $IMAGE_REPO:${VERSION}
           docker push $IMAGE_REPO:latest
 
-          echo "Image pushed:"
+          echo "Images pushed:"
           echo "  - $IMAGE_REPO:${{ github.sha }}"
-          echo "  - $IMAGE_REPO:${{ steps.version.outputs.version }}"
+          echo "  - $IMAGE_REPO:${VERSION}"
           echo "  - $IMAGE_REPO:latest"
 
   dast-scan:

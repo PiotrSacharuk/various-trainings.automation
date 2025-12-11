@@ -36,15 +36,17 @@ def get_last_tag() -> str:
 
 
 def get_commits_since_tag(tag: str) -> str:
-    """Get all commits since the given tag."""
+    """Get all commits since the given tag (excluding merge commits)."""
     try:
         repo = Repo(".")
         if tag == "v0.0.0":
-            # Get all commits
-            commits = list(repo.iter_commits())
+            # Get all commits (excluding merges)
+            commits = [c for c in repo.iter_commits() if len(c.parents) <= 1]
         else:
-            # Get commits since tag
-            commits = list(repo.iter_commits(f"{tag}..HEAD"))
+            # Get commits since tag (excluding merges)
+            commits = [
+                c for c in repo.iter_commits(f"{tag}..HEAD") if len(c.parents) <= 1
+            ]
 
         # Reverse to show oldest first (chronological order)
         commits = list(reversed(commits))
@@ -166,15 +168,18 @@ def main():
     print(f"version={new_version}")
     print(f"version_tag=v{new_version}")
 
-    try:
-        output_file = os.environ.get("GITHUB_OUTPUT")
-        if output_file:
+    # Write to file for GitHub Actions
+    output_file = os.environ.get("GITHUB_OUTPUT")
+    if output_file:
+        try:
             with open(output_file, "a") as f:
                 f.write(f"version={new_version}\n")
                 f.write(f"version_tag=v{new_version}\n")
-    except Exception:  # nosec B110
-        # Silently ignore if GITHUB_OUTPUT is not available (local execution)
-        pass
+            print("\nWritten to GITHUB_OUTPUT")
+        except Exception as e:
+            print(f"\nError writing to GITHUB_OUTPUT: {e}")
+    else:
+        print("\nGITHUB_OUTPUT not set (local mode)")
 
 
 if __name__ == "__main__":
