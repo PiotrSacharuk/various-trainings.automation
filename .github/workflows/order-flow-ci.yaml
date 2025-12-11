@@ -75,6 +75,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Build Docker image
         run: |
@@ -91,11 +94,11 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Generate SBOM with Syft
-        uses: anchore/syft-action@v0.17.0
-        with:
-          image: "order-flow:${{ github.sha }}"
-          format: json
-          output-file: sbom.json
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          syft order-flow:${{ github.sha }} -o json > sbom.json
+          echo "SBOM generated successfully"
+          ls -la sbom.json
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
@@ -141,6 +144,7 @@ jobs:
         run: poetry install
 
       - name: Determine version using conventional commits
+        id: version
         run: poetry run python src/version_bumper.py
 
       - name: Push Docker image to GHCR with semantic version
@@ -228,16 +232,8 @@ jobs:
 
       - name: Install git-cliff
         run: |
-          VERSION="v0.13.0"
-          FILE="git-cliff-${VERSION#v}-x86_64-unknown-linux-gnu.tar.gz"
-
-          curl -sSfL -o cliff.tgz \
-            "https://github.com/orhun/git-cliff/releases/download/${VERSION}/${FILE}"
-
-          tar -xzf cliff.tgz
-          sudo mv git-cliff /usr/local/bin/git-cliff
-
-          git-cliff --version
+          curl -sSfL https://github.com/orhun/git-cliff/releases/download/v0.13.0/git-cliff-0.13.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv git-cliff /usr/local/bin/
 
       - name: Generate changelog
         run: |
