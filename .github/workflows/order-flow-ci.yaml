@@ -167,3 +167,31 @@ jobs:
       - name: Stop application container
         if: always()
         run: docker stop order-flow-container || true
+
+  generate-release-notes:
+    needs: dast-scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install git-cliff
+        run: |
+          curl -sSfL https://github.com/orhun/git-cliff/releases/download/v0.13.0/git-cliff-0.13.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv git-cliff /usr/local/bin/
+
+      - name: Generate changelog
+        run: |
+          git-cliff --output CHANGELOG.md
+          echo "Changelog generated"
+          head -20 CHANGELOG.md
+
+      - name: Upload changelog as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: CHANGELOG.md
