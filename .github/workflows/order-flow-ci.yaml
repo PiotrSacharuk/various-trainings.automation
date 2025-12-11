@@ -91,11 +91,11 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Generate SBOM with Syft
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-          syft order-flow:${{ github.sha }} -o json > sbom.json
-          echo "SBOM generated successfully"
-          ls -la sbom.json
+        uses: anchore/syft-action@v0.17.0
+        with:
+          image: "order-flow:${{ github.sha }}"
+          format: json
+          output-file: sbom.json
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
@@ -228,8 +228,16 @@ jobs:
 
       - name: Install git-cliff
         run: |
-          curl -sSfL https://github.com/orhun/git-cliff/releases/download/v0.13.0/git-cliff-0.13.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
-          sudo mv git-cliff /usr/local/bin/
+          VERSION="v0.13.0"
+          FILE="git-cliff-${VERSION#v}-x86_64-unknown-linux-gnu.tar.gz"
+
+          curl -sSfL -o cliff.tgz \
+            "https://github.com/orhun/git-cliff/releases/download/${VERSION}/${FILE}"
+
+          tar -xzf cliff.tgz
+          sudo mv git-cliff /usr/local/bin/git-cliff
+
+          git-cliff --version
 
       - name: Generate changelog
         run: |
