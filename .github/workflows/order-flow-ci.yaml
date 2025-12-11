@@ -106,12 +106,32 @@ jobs:
           IMAGE_REPO="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/order-flow"
           echo "IMAGE_REPO=$IMAGE_REPO" >> $GITHUB_ENV
 
-      - name: Push Docker image to GHCR
+      - name: Determine version
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Last tag: $LAST_TAG"
+
+          VERSION=$(echo $LAST_TAG | sed 's/v//' | awk -F. '{print $1"."$2"."$3+1}')
+          VERSION_WITH_V="v$VERSION"
+
+          echo "New version: $VERSION_WITH_V"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_tag=$VERSION_WITH_V" >> $GITHUB_OUTPUT
+
+      - name: Push Docker image to GHCR with semantic version
         run: |
           docker tag order-flow:${{ github.sha }} $IMAGE_REPO:${{ github.sha }}
+          docker tag order-flow:${{ github.sha }} $IMAGE_REPO:${{ steps.version.outputs.version }}
           docker tag order-flow:${{ github.sha }} $IMAGE_REPO:latest
+
           docker push $IMAGE_REPO:${{ github.sha }}
+          docker push $IMAGE_REPO:${{ steps.version.outputs.version }}
           docker push $IMAGE_REPO:latest
+
+          echo "Image pushed:"
+          echo "  - $IMAGE_REPO:${{ github.sha }}"
+          echo "  - $IMAGE_REPO:${{ steps.version.outputs.version }}"
+          echo "  - $IMAGE_REPO:latest"
 
   dast-scan:
     needs: build-and-scan
