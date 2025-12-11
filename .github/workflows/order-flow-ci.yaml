@@ -141,8 +141,7 @@ jobs:
         run: poetry install
 
       - name: Determine version using conventional commits
-        run: |
-          poetry run python src/version_bumper.py >> $GITHUB_OUTPUT
+        run: poetry run python src/version_bumper.py
 
       - name: Push Docker image to GHCR with semantic version
         run: |
