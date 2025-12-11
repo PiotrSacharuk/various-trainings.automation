@@ -67,6 +67,8 @@ jobs:
   build-and-scan:
     needs: code-quality
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     permissions:
       contents: read
       packages: write
