@@ -40,6 +40,16 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pypoetry
+            .venv
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
       - name: Install dependencies
         run: poetry install
 
@@ -106,9 +116,33 @@ jobs:
           IMAGE_REPO="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/order-flow"
           echo "IMAGE_REPO=$IMAGE_REPO" >> $GITHUB_ENV
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pypoetry
+            .venv
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: poetry install
+
       - name: Determine version using conventional commits
         run: |
-          python src/version_bumper.py >> $GITHUB_OUTPUT
+          poetry run python src/version_bumper.py >> $GITHUB_OUTPUT
 
       - name: Push Docker image to GHCR with semantic version
         run: |
