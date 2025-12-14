@@ -1,0 +1,72 @@
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to promote (e.g., 0.2.5)'
+        required: true
+        type: string
+
+jobs:
+  validate-and-promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check if version exists in GHCR
+        id: check-version
+        env:
+          REGISTRY_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+
+          echo "Checking if version $VERSION exists in GHCR..."
+
+          TAGS=$(curl -s \
+            -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
+            "https://ghcr.io/v2/piotrsacharuk/order-flow/tags/list" \
+            | jq -r '.tags[]' 2>/dev/null)
+
+          echo "Available versions:"
+          echo "$TAGS" | sort -rV
+
+          if echo "$TAGS" | grep -q "^${VERSION}$"; then
+            echo "Version $VERSION found!"
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $VERSION NOT FOUND in GHCR!"
+            echo "found=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Checkout GitOps repo
+        if: steps.check-version.outputs.found == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: PiotrSacharuk/various-trainings.gitops
+          token: ${{ secrets.PAT_TOKEN }}
+          path: gitops
+
+      - name: Update PROD values
+        if: steps.check-version.outputs.found == 'true'
+        working-directory: gitops/orderflow
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          sed -i "s/tag: \".*\"/tag: \"$VERSION\"/" overlays/prod/values-prod.yaml
+          echo "Updated to $VERSION"
+
+      - name: Commit and push
+        if: steps.check-version.outputs.found == 'true'
+        working-directory: gitops
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          if ! git diff --quiet; then
+            git add orderflow/overlays/prod/values-prod.yaml
+            git commit -m "chore: Promote to PROD v${VERSION}"
+            git push origin master
+            echo "PROD updated!"
+          fi
