@@ -279,7 +279,8 @@ jobs:
           echo "Updating values.yaml with version: $VERSION"
 
           # Update image tag
-          sed -i "s/tag: \".*\"/tag: \"$VERSION\"/" values.yaml
+          sed -i "s/tag: \".*\"/tag: \"$VERSION\"/" base/values.yaml
+          sed -i "s/tag: \".*\"/tag: \"$VERSION\"/" overlays/staging/values-staging.yaml
 
           echo "Changes:"
           git diff values.yaml
@@ -298,7 +299,7 @@ jobs:
             exit 0
           fi
 
-          git add orderflow/values.yaml
+          git add orderflow/base/values.yaml orderflow/overlays/staging/values-staging.yaml
           git commit -m "chore: Update order-flow to version ${VERSION}
 
           Automated update from CI pipeline
