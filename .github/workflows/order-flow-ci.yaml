@@ -180,6 +180,22 @@ jobs:
           echo "  - $IMAGE_REPO:${VERSION}"
           echo "  - $IMAGE_REPO:latest"
 
+      - name: Create and push Git tag
+        if: github.event_name == 'push'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} already exists!"
+            exit 0
+          fi
+
+          git tag -a "v${VERSION}" -m "Release v${VERSION}
+
+
   dast-scan:
     needs: build-and-scan
     runs-on: ubuntu-latest
@@ -262,7 +278,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     permissions:
-      contents: read
+      contents: write
+      packages: write
+      id-token: write
     steps:
       - name: Checkout GitOps repo
         uses: actions/checkout@v4
