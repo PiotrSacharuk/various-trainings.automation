@@ -193,8 +193,9 @@ jobs:
             exit 0
           fi
 
-          git tag -a "v${VERSION}" -m "Release v${VERSION}
-
+          git tag -a "v${VERSION}" -m "Release v${VERSION} - Image: $IMAGE_REPO:${VERSION}"
+          git push origin "v${VERSION}"
+          echo "Tag created and pushed: v${VERSION}"
 
   dast-scan:
     needs: build-and-scan
