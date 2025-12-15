@@ -23,22 +23,17 @@ jobs:
 
           echo "Checking if version $VERSION exists in GHCR..."
 
-          TAGS=$(curl -s \
-            -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
-            "https://ghcr.io/v2/piotrsacharuk/order-flow/tags/list" \
-            | jq -r '.tags[]' 2>/dev/null)
-
-          echo "Available versions:"
-          echo "$TAGS" | sort -rV
-
-          if echo "$TAGS" | grep -q "^${VERSION}$"; then
-            echo "Version $VERSION found!"
+          echo "${REGISTRY_TOKEN}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          if docker pull "ghcr.io/piotrsacharuk/order-flow:${VERSION}" --quiet > /dev/null 2>&1; then
+            echo "✓ Version $VERSION found in GHCR!"
             echo "found=true" >> $GITHUB_OUTPUT
           else
-            echo "Version $VERSION NOT FOUND in GHCR!"
+            echo "✗ Version $VERSION NOT FOUND in GHCR!"
             echo "found=false" >> $GITHUB_OUTPUT
             exit 1
           fi
+
+          docker logout ghcr.io
 
       - name: Checkout GitOps repo
         if: steps.check-version.outputs.found == 'true'
