@@ -53,7 +53,7 @@ jobs:
         working-directory: gitops/orderflow
         run: |
           VERSION="${{ github.event.inputs.version }}"
-          sed -i "s/tag: \".*\"/tag: \"$VERSION\"/" overlays/prod/values-prod.yaml
+          sed -i "s/tag: \".*\"/tag: \"$VERSION\"/" overlays/prod/values.yaml
           echo "Updated to $VERSION"
 
       - name: Commit and push
@@ -65,7 +65,7 @@ jobs:
           git config user.email "actions@github.com"
 
           if ! git diff --quiet; then
-            git add orderflow/overlays/prod/values-prod.yaml
+            git add orderflow/overlays/prod/values.yaml
             git commit -m "chore: Promote to PROD v${VERSION}"
             git push origin master
             echo "PROD updated!"
