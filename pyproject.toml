@@ -8,12 +8,12 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "pre-commit (>=4.5.0,<5.0.0)",
+    "pre-commit (>=4.5.1,<5.0.0)",
     "detect-secrets (>=1.5.0,<2.0.0)",
     "flask (>=3.1.2,<4.0.0)",
-    "python-dotenv (>=1.0.0,<2.0.0)",
-    "prometheus-client (>=0.23.1,<0.24.0)",
-    "gitpython (>=3.1.45,<4.0.0)"
+    "python-dotenv (>=1.2.1,<2.0.0)",
+    "prometheus-client (>=0.24.1,<0.24.0)",
+    "gitpython (>=3.1.46,<4.0.0)"
 ]
 
 [tool.poetry]
@@ -33,9 +33,9 @@ build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
 dev = [
-    "black (>=25.11.0,<26.0.0)",
+    "black (>=26.1.0,<27.0.0)",
     "isort (>=7.0.0,<8.0.0)",
     "flake8 (>=7.3.0,<8.0.0)",
-    "bandit (>=1.9.2,<2.0.0)",
-    "mypy (>=1.19.0,<2.0.0)"
+    "bandit (>=1.9.3,<2.0.0)",
+    "mypy (>=1.19.1,<2.0.0)"
 ]
