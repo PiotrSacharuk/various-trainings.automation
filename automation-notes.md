@@ -143,7 +143,7 @@ Budujemy lekki i bezpieczny obraz produkcyjny używając **Multi-Stage Build**.
 
 ```dockerfile
 # ETAP 1: Builder (ciężki obraz z kompilatorami)
-FROM python:3.10-slim as builder
+FROM python:3.12-slim as builder
 
 WORKDIR /app
 
@@ -157,12 +157,12 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev --no-interaction --no-ansi
 
 # ETAP 2: Runtime (lekki obraz produkcyjny)
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
 # Kopiowanie bibliotek z etapu builder
-COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
@@ -209,7 +209,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - name: Install Poetry
         uses: snok/install-poetry@v1
       - name: Install dependencies
