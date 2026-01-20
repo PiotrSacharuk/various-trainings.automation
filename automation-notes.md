@@ -1,174 +1,174 @@
 # 🎓 Automation Maestro: The Complete DevOps & GitOps Handbook
 
-**Wersja:** 1.0.0
-**Autor:** Automation Maestro Student
-**Opis:** Kompletna dokumentacja wdrożenia nowoczesnego stacku CI/CD dla mikroserwisów, oparta na projekcie "OrderFlow".
+**Version:** 1.0.0
+**Author:** Automation Maestro Student
+**Description:** Complete documentation of modern CI/CD stack implementation for microservices, based on the "OrderFlow" project.
 
 ---
 
-## 📑 Spis Treści
+## 📑 Table of Contents
 
-1.  [Filozofia DevSecOps i Shift Left](#1-filozofia-devsecops-i-shift-left)
-2.  [Zarządzanie Projektem (Python & Poetry)](#2-zarządzanie-projektem-python--poetry)
-3.  [Higiena Repozytorium (Pre-commit)](#3-higiena-repozytorium-pre-commit)
-4.  [Konteneryzacja (Docker & Image Security)](#4-konteneryzacja-docker--image-security)
+1.  [DevSecOps Philosophy & Shift Left](#1-devsecops-philosophy--shift-left)
+2.  [Project Management (Python & Poetry)](#2-project-management-python--poetry)
+3.  [Repository Hygiene (Pre-commit)](#3-repository-hygiene-pre-commit)
+4.  [Containerization (Docker & Image Security)](#4-containerization-docker--image-security)
 5.  [Continuous Integration (GitHub Actions)](#5-continuous-integration-github-actions)
-6.  [Pakowanie Aplikacji (Helm)](#6-pakowanie-aplikacji-helm)
-7.  [GitOps i ArgoCD](#7-gitops-i-argocd)
+6.  [Application Packaging (Helm)](#6-application-packaging-helm)
+7.  [GitOps and ArgoCD](#7-gitops-and-argocd)
 8.  [Safe Deployments (Argo Rollouts & Canary)](#8-safe-deployments-argo-rollouts--canary)
-9.  [Skalowalność (HPA & Metrics)](#9-skalowalność-hpa--metrics)
+9.  [Scalability (HPA & Metrics)](#9-scalability-hpa--metrics)
 10. [Troubleshooting & Battle Scars](#10-troubleshooting--battle-scars)
-11. [Słownik Pojęć](#11-słownik-pojęć)
+11. [Glossary of Terms](#11-glossary-of-terms)
 
 ---
 
-## 1. Filozofia DevSecOps i Shift Left
+## 1. DevSecOps Philosophy & Shift Left
 
-### Co to jest "Shift Left"?
-Tradycyjnie testy bezpieczeństwa i jakości odbywały się na końcu procesu (przed wdrożeniem). "Shift Left" polega na przesunięciu tych testów **jak najwcześniej** w cyklu wytwarzania oprogramowania (na lewą stronę osi czasu).
+### What is "Shift Left"?
+Traditionally, security and quality tests were performed at the end of the process (before deployment). "Shift Left" involves moving these tests **as early as possible** in the software development cycle (to the left side of the timeline).
 
-**Koszt naprawy błędu:**
-*   Podczas pisania kodu (Local): 1x
-*   W pipeline CI: 10x
-*   Na produkcji: 100x + utrata reputacji
+**Cost of fixing a bug:**
+*   During code writing (Local): 1x
+*   In CI pipeline: 10x
+*   In production: 100x + reputation loss
 
-### Warstwy Ochrony w naszym projekcie:
-1.  **IDE/Local:** Pre-commit hooks (blokada commitów z błędami).
-2.  **CI Pipeline:** SAST (Static Application Security Testing) i Linters.
-3.  **Build:** Skanowanie obrazów kontenerów (Trivy).
-4.  **Cluster:** Polityki sieciowe, User ID w kontenerach.
+### Layers of Protection in Our Project:
+1.  **IDE/Local:** Pre-commit hooks (blocking commits with errors).
+2.  **CI Pipeline:** SAST (Static Application Security Testing) and Linters.
+3.  **Build:** Container image scanning (Trivy).
+4.  **Cluster:** Network policies, User ID in containers.
 
 ---
 
-## 2. Zarządzanie Projektem (Python & Poetry)
+## 2. Project Management (Python & Poetry)
 
-Zamiast `pip` i `requirements.txt`, używamy **Poetry** do deterministycznego zarządzania zależnościami.
+Instead of `pip` and `requirements.txt`, we use **Poetry** for deterministic dependency management.
 
-### Struktura projektu
+### Project Structure
 ```text
 my-project/
-├── pyproject.toml       # Główny plik konfiguracyjny (zależności + config narzędzi)
-├── poetry.lock          # Zamrożone wersje bibliotek (SHA)
-├── src/                 # Kod źródłowy
+├── pyproject.toml       # Main configuration file (dependencies + tool config)
+├── poetry.lock          # Frozen library versions (SHA)
+├── src/                 # Source code
 │   └── main.py
-└── tests/               # Testy
+└── tests/               # Tests
 ```
 
-### Kluczowe komendy Poetry
+### Key Poetry Commands
 ```bash
-# Inicjalizacja projektu
+# Project initialization
 poetry init
 
-# Dodawanie bibliotek produkcyjnych
+# Adding production libraries
 poetry add flask requests
 
-# Dodawanie narzędzi deweloperskich (nie trafią do obrazu Docker)
+# Adding development tools (won't be included in Docker image)
 poetry add --group dev black isort flake8 bandit mypy pre-commit
 
-# Instalacja środowiska
+# Installing environment
 poetry install
 
-# Uruchomienie skryptu w venv
+# Running a script in venv
 poetry run python src/main.py
 ```
 
 ---
 
-## 3. Higiena Repozytorium (Pre-commit)
+## 3. Repository Hygiene (Pre-commit)
 
-Narzędzie, które uruchamia skrypty sprawdzające kod **zanim** Git pozwoli na wykonanie polecenia `commit`.
+A tool that runs code validation scripts **before** Git allows the `commit` command to execute.
 
-### Instalacja
+### Installation
 ```bash
 poetry add --group dev pre-commit
 pre-commit install --hook-type pre-commit --hook-type commit-msg
 ```
 
-### Konfiguracja: `.pre-commit-config.yaml`
-To serce automatyzacji lokalnej.
+### Configuration: `.pre-commit-config.yaml`
+This is the heart of local automation.
 
 ```yaml
 repos:
-  # 1. Wykrywanie sekretów (Kluczowe dla bezpieczeństwa!)
+  # 1. Secret Detection (Critical for security!)
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        # --baseline pozwala ignorować stare sekrety (legacy)
-        # --no-verify jest potrzebne przy pierwszym uruchomieniu
+        # --baseline allows ignoring old secrets (legacy)
+        # --no-verify is needed on first run
         args: ["--baseline", ".secrets.baseline"]
         exclude: poetry.lock
 
-  # 2. Podstawowa higiena plików
+  # 2. Basic File Hygiene
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
-      - id: check-yaml            # Czy YAML jest poprawny?
-      - id: end-of-file-fixer     # Czy plik ma pustą linię na końcu?
-      - id: trailing-whitespace   # Usuwa spacje na końcach linii
+      - id: check-yaml            # Is YAML valid?
+      - id: end-of-file-fixer     # Does file have empty line at end?
+      - id: trailing-whitespace   # Removes trailing spaces
 
   # 3. Code Quality (Python)
   - repo: https://github.com/psf/black
     rev: 23.9.1
     hooks:
-      - id: black                 # Automatyczne formatowanie kodu
+      - id: black                 # Automatic code formatting
 
-  # 4. Standard Commitów
+  # 4. Commit Standards
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v3.6.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
-        # Wymusza format: "feat: opis", "fix: opis", "chore: opis"
+        # Enforces format: "feat: description", "fix: description", "chore: description"
         args: ["feat", "fix", "chore", "docs", "style", "refactor", "test", "ci"]
 ```
 
 ### Detect-Secrets Workflow
-Narzędzie to zapobiega wyciekom kluczy API, AWS keys, Private Keys itp.
+This tool prevents leaks of API keys, AWS credentials, Private Keys, etc.
 
-1.  **Generowanie bazy (Baseline):**
+1.  **Generate baseline:**
     ```bash
     detect-secrets scan > .secrets.baseline
     git add .secrets.baseline
     ```
-2.  **Działanie:** Jeśli w kodzie pojawi się ciąg znaków o wysokiej entropii, commit zostanie odrzucony.
+2.  **Operation:** If code contains a high-entropy string, the commit is rejected.
 
 ---
 
-## 4. Konteneryzacja (Docker & Image Security)
+## 4. Containerization (Docker & Image Security)
 
-Budujemy lekki i bezpieczny obraz produkcyjny używając **Multi-Stage Build**.
+We build a lightweight and secure production image using **Multi-Stage Build**.
 
 ### Dockerfile (Best Practices)
 
 ```dockerfile
-# ETAP 1: Builder (ciężki obraz z kompilatorami)
+# STAGE 1: Builder (heavy image with compilers)
 FROM python:3.12-slim as builder
 
 WORKDIR /app
 
-# Instalacja Poetry
+# Install Poetry
 RUN pip install poetry && \
     poetry config virtualenvs.create false
 
 COPY pyproject.toml poetry.lock ./
 
-# Instalacja tylko zależności produkcyjnych (bez --dev)
+# Install only production dependencies (without --dev)
 RUN poetry install --no-dev --no-interaction --no-ansi
 
-# ETAP 2: Runtime (lekki obraz produkcyjny)
+# STAGE 2: Runtime (lightweight production image)
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Kopiowanie bibliotek z etapu builder
+# Copy libraries from builder stage
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
 
-# SECURITY: Utworzenie użytkownika non-root
-# Uruchamianie aplikacji jako root to ryzyko bezpieczeństwa!
+# SECURITY: Create non-root user
+# Running applications as root is a security risk!
 RUN useradd -m myuser
 USER myuser
 
@@ -179,11 +179,11 @@ CMD ["python", "src/main.py"]
 
 ## 5. Continuous Integration (GitHub Actions)
 
-Pipeline w `ci.yaml` uruchamia się przy każdym Pull Requeście. Realizuje strategię "Defense in Depth".
+The pipeline in `ci.yaml` runs on every Pull Request. It implements a "Defense in Depth" strategy.
 
-### Kluczowe sekcje pliku `.github/workflows/order-flow-ci.yaml`
+### Key Sections of `.github/workflows/order-flow-ci.yaml`
 
-#### A. Konfiguracja podstawowa
+#### A. Basic Configuration
 
 ```yaml
 on:
@@ -198,7 +198,7 @@ permissions:
 ```
 
 #### B. Job: Code Quality
-Sprawdza jakość kodu przed zbudowaniem (bandit, black, isort, flake8).
+Checks code quality before building (bandit, black, isort, flake8).
 
 ```yaml
 jobs:
@@ -228,7 +228,7 @@ jobs:
 ```
 
 #### C. Job: Build & Scan & Push
-Buduje obraz Docker, skanuje go (Trivy), generuje SBOM i wypycha do GHCR.
+Builds Docker image, scans it (Trivy), generates SBOM and pushes to GHCR.
 
 ```yaml
   build-and-scan:
@@ -244,7 +244,7 @@ Buduje obraz Docker, skanuje go (Trivy), generuje SBOM i wypycha do GHCR.
       - name: Build Docker image
         run: docker build -t order-flow:${{ github.sha }} .
 
-      # Skanowanie obrazu na CVE
+      # Scan image for CVE
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
@@ -274,7 +274,7 @@ Buduje obraz Docker, skanuje go (Trivy), generuje SBOM i wypycha do GHCR.
           echo "SBOM generated successfully"
           ls -la sbom.json
 
-      # Logowanie i Push do GHCR
+      # Login and Push to GHCR
       - name: Login to GHCR
         uses: docker/login-action@v2
         with:
@@ -294,61 +294,61 @@ Buduje obraz Docker, skanuje go (Trivy), generuje SBOM i wypycha do GHCR.
 
 ---
 
-## 6. Pakowanie Aplikacji (Helm)
+## 6. Application Packaging (Helm)
 
-Helm to "Menadżer pakietów dla Kubernetesa". Pozwala sparametryzować pliki YAML.
+Helm is the "Package Manager for Kubernetes". It allows parametrizing YAML files.
 
-### Struktura Chartu
+### Chart Structure
 ```text
 charts/orderflow/
-├── Chart.yaml          # Nazwa i wersja chartu
-├── values.yaml         # Domyślne wartości
-└── templates/          # Szablony YAML
-    ├── deployment.yaml # Definicja Podów (lub Rollout)
-    ├── service.yaml    # Definicja sieciowa
-    └── hpa.yaml        # Autoskalowanie
+├── Chart.yaml          # Chart name and version
+├── values.yaml         # Default values
+└── templates/          # YAML templates
+    ├── deployment.yaml # Pod definitions (or Rollout)
+    ├── service.yaml    # Network definitions
+    └── hpa.yaml        # Autoscaling
 ```
 
 ### Templating
-W plikach `templates/*.yaml` używamy składni Go Template:
+In `templates/*.yaml` files, we use Go Template syntax:
 
 ```yaml
 image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 replicas: {{ .Values.replicaCount }}
 ```
 
-**Przydatne komendy:**
+**Useful commands:**
 ```bash
-# Renderowanie szablonu lokalnie (debugowanie)
+# Render template locally (debugging)
 helm template debug-release . --values values.yaml --debug
 
-# Sprawdzanie błędów (lint)
+# Check for errors (lint)
 helm lint .
 ```
 
 ---
 
-## 7. GitOps i ArgoCD
+## 7. GitOps and ArgoCD
 
-### Architektura "Two Repos"
-Separacja kodu aplikacji od konfiguracji infrastruktury.
+### "Two Repos" Architecture
+Separation of application code from infrastructure configuration.
 
 1.  **App Repo (`various-trainings`)**:
-    *   Tu pracują programiści.
-    *   CI buduje obraz Docker.
+    *   Where developers work.
+    *   CI builds Docker image.
 2.  **GitOps Config Repo (`various-trainings.gitops`)**:
-    *   Tu pracują DevOps/Boty.
-  *   Zawiera Helm Chart i pliki `values.yaml` dla każdego środowiska (dev, prod).
-  *   Repozytorium GitOps dla tego projektu: `https://github.com/PiotrSacharuk/various-trainings.gitops`
-    *   Jest "Źródłem Prawdy" dla ArgoCD.
+    *   Where DevOps/Bots work.
+    *   Contains Helm Chart and `values.yaml` files for each environment (dev, prod).
+    *   GitOps repository for this project: `https://github.com/PiotrSacharuk/various-trainings.gitops`
+    *   It is the "Source of Truth" for ArgoCD.
 
-### Dlaczego dwa repozytoria?
-1.  Unikamy pętli nieskończoności w CI (commit z CI wyzwala CI).
-2.  Czysty podział uprawnień (dev nie musi mieć write access do prod config).
-3.  Czysta historia zmian infrastruktury.
+### Why Two Repositories?
+1.  Avoid infinite loops in CI (commit from CI triggering CI).
+2.  Clean separation of permissions (dev doesn't need write access to prod config).
+3.  Clean history of infrastructure changes.
 
 ### ArgoCD Application
-Definicja obiektu, który łączy Git z Klastrem.
+Definition of an object that links Git to the Cluster.
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -365,52 +365,52 @@ spec:
     namespace: default
   syncPolicy:
     automated:
-      selfHeal: true  # Automatycznie naprawiaj "drift" (ręczne zmiany na klastrze)
-      prune: true     # Usuwaj zasoby usunięte z Git
+      selfHeal: true  # Automatically fix "drift" (manual changes on cluster)
+      prune: true     # Remove resources deleted from Git
 ```
 
 ---
 
 ## 8. Safe Deployments (Argo Rollouts & Canary)
 
-Zastępujemy standardowy `Deployment` obiektem `Rollout`, aby umożliwić wdrożenia kanarkowe.
+We replace the standard `Deployment` object with a `Rollout` object to enable canary deployments.
 
-### Co to jest Canary Release?
-Wdrażanie nowej wersji na mały procent ruchu (np. 20%), weryfikacja błędów, a następnie pełne wdrożenie.
+### What is Canary Release?
+Deploying a new version to a small percentage of traffic (e.g., 20%), verifying for errors, then full deployment.
 
-### Konfiguracja Rollout (`templates/deployment.yaml`)
+### Rollout Configuration (`templates/deployment.yaml`)
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
-kind: Rollout # Zamiast Deployment
+kind: Rollout # Instead of Deployment
 metadata:
   name: orderflow
 spec:
-  # replicas: usunięte stąd, bo zarządza nimi HPA!
+  # replicas: removed here because HPA manages it!
   strategy:
     canary:
       steps:
-      - setWeight: 20         # Krok 1: 20% ruchu na nową wersję
-      - pause: {}             # Krok 2: Czekaj na decyzję (Promote)
-      - setWeight: 50         # Krok 3: 50% ruchu
-      - pause: {duration: 30s}# Krok 4: Czekaj 30s
-      - setWeight: 100        # Krok 5: 100% ruchu
+      - setWeight: 20         # Step 1: 20% traffic to new version
+      - pause: {}             # Step 2: Wait for decision (Promote)
+      - setWeight: 50         # Step 3: 50% traffic
+      - pause: {duration: 30s}# Step 4: Wait 30s
+      - setWeight: 100        # Step 5: 100% traffic
 ```
 
-**Obsługa:**
-- W ArgoCD UI widzimy status **Paused** podczas wdrożenia.
-- Przycisk **Resume** (lub CLI `kubectl argo rollouts promote`) pozwala przejść dalej.
-- Przycisk **Abort** (lub CLI `undo`) natychmiast cofa do stabilnej wersji.
+**Operation:**
+- In ArgoCD UI we see **Paused** status during deployment.
+- **Resume** button (or CLI `kubectl argo rollouts promote`) allows proceeding.
+- **Abort** button (or CLI `undo`) immediately reverts to stable version.
 
 ---
 
-## 9. Skalowalność (HPA & Metrics)
+## 9. Scalability (HPA & Metrics)
 
-Automatyczne dostosowanie liczby podów do obciążenia.
+Automatic adjustment of pod count based on load.
 
-### Wymagania
-1.  **Metrics Server**: Musi działać na klastrze (`minikube addons enable metrics-server`).
-2.  **Requests/Limits**: Kontener musi mieć zdefiniowane `resources.requests.cpu`.
+### Requirements
+1.  **Metrics Server**: Must be running on cluster (`minikube addons enable metrics-server`).
+2.  **Requests/Limits**: Container must have defined `resources.requests.cpu`.
 
 ### HPA (`templates/hpa.yaml`)
 
@@ -422,7 +422,7 @@ metadata:
 spec:
   scaleTargetRef:
     apiVersion: argoproj.io/v1alpha1
-    kind: Rollout  # HPA musi celować w Rollout!
+    kind: Rollout  # HPA must target Rollout!
     name: orderflow
   minReplicas: 2
   maxReplicas: 10
@@ -432,46 +432,46 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 50 # Skaluj, gdy średnie CPU > 50%
+        averageUtilization: 50 # Scale when average CPU > 50%
 ```
 
-**Ważne:** Jeśli używasz HPA, **usuń** pole `replicas` z manifestu `Rollout/Deployment`. Inaczej HPA i GitOps będą ze sobą walczyć (HPA ustawi 5, GitOps przywróci 1).
+**Important:** If using HPA, **remove** the `replicas` field from `Rollout/Deployment` manifest. Otherwise HPA and GitOps will conflict (HPA sets 5, GitOps reverts to 1).
 
 ---
 
 ## 10. Troubleshooting & Battle Scars
 
-Lista problemów napotkanych podczas wdrożenia i ich rozwiązania.
+List of problems encountered during deployment and their solutions.
 
 ### 🔴 Problem: `ErrImagePull` / `ImagePullBackOff`
-*   **Objaw:** Pod nie startuje, w events widać "Authentication required".
-*   **Przyczyna:** Obraz w GHCR jest prywatny, a klaster nie ma tokena.
-*   **Rozwiązanie:**
-    1. Utworzenie sekretu: `kubectl create secret docker-registry ghcr-secret ...`
-    2. Dodanie `imagePullSecrets` do specyfikacji poda w Helm.
+*   **Symptom:** Pod doesn't start, events show "Authentication required".
+*   **Cause:** Image in GHCR is private, cluster doesn't have token.
+*   **Solution:**
+    1. Create secret: `kubectl create secret docker-registry ghcr-secret ...`
+    2. Add `imagePullSecrets` to pod specification in Helm.
 
-### 🔴 Problem: ArgoCD nie widzi zmian (Replicas 1 vs 5)
-*   **Objaw:** W Gicie jest `replicaCount: 5`, ArgoCD robi Sync, ale na klastrze nadal `1`.
-*   **Przyczyna:** Wartość parametru była **nadpisana (override)** w definicji Application w ArgoCD. Parametry aplikacji mają priorytet nad Gitem.
-*   **Rozwiązanie:** Usunięcie nadpisania w UI ArgoCD (Parameters tab).
+### 🔴 Problem: ArgoCD doesn't see changes (Replicas 1 vs 5)
+*   **Symptom:** Git has `replicaCount: 5`, ArgoCD Syncs, but cluster still shows `1`.
+*   **Cause:** Parameter value was **overridden** in ArgoCD Application definition. Application parameters have priority over Git.
+*   **Solution:** Remove override in ArgoCD UI (Parameters tab).
 
-### 🔴 Problem: GitHub Actions nie widzi `ci.yaml`
-*   **Objaw:** Push na branch nie uruchamia pipeline'u.
-*   **Przyczyna:** Plik był w `automation/.github/workflows/`, a GitHub szuka w root `.github/workflows/`.
-*   **Rozwiązanie:** Przeniesienie pliku do roota i dodanie `defaults.run.working-directory` w YAML.
+### 🔴 Problem: GitHub Actions doesn't see `ci.yaml`
+*   **Symptom:** Push to branch doesn't trigger pipeline.
+*   **Cause:** File was in `automation/.github/workflows/`, but GitHub looks in root `.github/workflows/`.
+*   **Solution:** Move file to root and add `defaults.run.working-directory` in YAML.
 
 ### 🔴 Problem: Helm Template Error
-*   **Objaw:** `Error converting YAML to JSON: did not find expected key`.
-*   **Przyczyna:** Błąd wcięć (indentation) w pliku `deployment.yaml` przy pętli `range` dla zmiennych środowiskowych.
+*   **Symptom:** `Error converting YAML to JSON: did not find expected key`.
+*   **Cause:** Indentation error in `deployment.yaml` file in `range` loop for environment variables.
 
 ---
 
-## 11. Słownik Pojęć
+## 11. Glossary of Terms
 
-*   **CI (Continuous Integration):** Częste integrowanie kodu (merge), automatyczne testy i budowanie artefaktów.
-*   **CD (Continuous Delivery):** Automatyczne dostarczanie kodu do środowisk (staging/prod), czasem z manualnym zatwierdzeniem.
-*   **GitOps:** Model operacyjny, gdzie Git jest jedynym źródłem prawdy dla infrastruktury.
-*   **Drift:** Różnica między stanem w Git a stanem faktycznym na klastrze.
-*   **Canary Release:** Technika wdrażania polegająca na stopniowym udostępnianiu nowej wersji.
-*   **Monorepo:** Jedno repozytorium zawierające kod wielu projektów/usług.
-*   **SBOM (Software Bill of Materials):** Lista wszystkich komponentów i bibliotek w oprogramowaniu (ważne dla security).
+*   **CI (Continuous Integration):** Frequent code integration (merge), automated tests and artifact building.
+*   **CD (Continuous Delivery):** Automatic delivery of code to environments (staging/prod), sometimes with manual approval.
+*   **GitOps:** Operational model where Git is the single source of truth for infrastructure.
+*   **Drift:** Difference between state in Git and actual state on cluster.
+*   **Canary Release:** Deployment technique involving gradual rollout of new version.
+*   **Monorepo:** Single repository containing code for multiple projects/services.
+*   **SBOM (Software Bill of Materials):** List of all components and libraries in software (important for security).
