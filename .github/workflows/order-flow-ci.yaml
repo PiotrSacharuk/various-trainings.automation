@@ -87,7 +87,7 @@ jobs:
           docker build -t order-flow:${{ github.sha }} .
 
       - name: Scan Docker image for vulnerabilities
-        uses: aquasecurity/trivy-action@0.33.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: order-flow:${{ github.sha }}
           format: 'table'
