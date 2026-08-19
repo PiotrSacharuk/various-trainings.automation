@@ -1,23 +1,37 @@
 FROM python:3.14-slim AS builder
+
 WORKDIR /app
 
-RUN pip install --no-cache-dir poetry && poetry config virtualenvs.create false
+ENV POETRY_VERSION=2.2.1 \
+    POETRY_HOME=/opt/poetry \
+    POETRY_VIRTUALENVS_CREATE=true \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1 \
+    PATH="/opt/poetry/bin:$PATH"
+
+RUN pip install --no-cache-dir "poetry==${POETRY_VERSION}"
+
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --only=main --no-interaction --no-ansi
 
-FROM python:3.14-slim
+RUN poetry install --only=main --no-root --no-ansi
+
+FROM python:3.14-slim AS runtime
+
 WORKDIR /app
 
-COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    FLASK_HOST=0.0.0.0 \
+    FLASK_PORT=5000 \
+    FLASK_DEBUG=False
+
+COPY --from=builder /app/.venv /app/.venv
+
 COPY . .
 
 RUN useradd --create-home --shell /usr/sbin/nologin appuser \
     && chown -R appuser:appuser /app
+
 USER appuser
 
-ENV FLASK_HOST=0.0.0.0
-ENV FLASK_PORT=5000
-ENV FLASK_DEBUG=False
-
-CMD python -m flask --app src.main:app run --host=${FLASK_HOST} --port=${FLASK_PORT}
+CMD ["python", "-m", "flask", "--app", "src.main:app", "run", "--host=0.0.0.0", "--port=5000"]
