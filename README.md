@@ -42,7 +42,7 @@ A production-ready Python microservice built to demonstrate modern DevOps practi
 
 ## 🛠️ Tech Stack
 
-- **Language**: Python 3.12+ (Poetry)
+- **Language**: Python 3.14+ (Poetry)
 - **CI/CD**: GitHub Actions
 - **Infrastructure**: Kubernetes (Minikube/K3s)
 - **GitOps**: ArgoCD

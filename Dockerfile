@@ -1,16 +1,19 @@
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 WORKDIR /app
-RUN pip install poetry && poetry config virtualenvs.create false
+
+RUN pip install --no-cache-dir poetry && poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock ./
 RUN poetry install --only=main --no-interaction --no-ansi
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 WORKDIR /app
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+
+COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
 
-RUN useradd -m appuser
+RUN useradd --create-home --shell /usr/sbin/nologin appuser \
+    && chown -R appuser:appuser /app
 USER appuser
 
 ENV FLASK_HOST=0.0.0.0

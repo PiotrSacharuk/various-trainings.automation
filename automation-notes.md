@@ -143,7 +143,7 @@ We build a lightweight and secure production image using **Multi-Stage Build**.
 
 ```dockerfile
 # STAGE 1: Builder (heavy image with compilers)
-FROM python:3.12-slim as builder
+FROM python:3.14-slim as builder
 
 WORKDIR /app
 
@@ -157,12 +157,12 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev --no-interaction --no-ansi
 
 # STAGE 2: Runtime (lightweight production image)
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
 # Copy libraries from builder stage
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
@@ -209,7 +209,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.14'
       - name: Install Poetry
         uses: snok/install-poetry@v1
       - name: Install dependencies
@@ -447,7 +447,7 @@ List of problems encountered during deployment and their solutions.
 *   **Symptom:** Pod doesn't start, events show "Authentication required".
 *   **Cause:** Image in GHCR is private, cluster doesn't have token.
 *   **Solution:**
-    1. Create secret: `kubectl create secret docker-registry ghcr-secret ...`
+    1. Create secret: `kubectl create secret docker-registry ghcr-secret ...` <!-- pragma: allowlist secret -->
     2. Add `imagePullSecrets` to pod specification in Helm.
 
 ### 🔴 Problem: ArgoCD doesn't see changes (Replicas 1 vs 5)
