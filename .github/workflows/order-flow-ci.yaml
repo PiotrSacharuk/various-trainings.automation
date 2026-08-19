@@ -17,7 +17,7 @@ defaults:
 
 env:
   FLASK_PORT: 5000
-  PYTHON_VERSION: '3.12'
+  PYTHON_VERSION: "3.14"
 
 jobs:
   code-quality:
@@ -90,11 +90,11 @@ jobs:
         uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: order-flow:${{ github.sha }}
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: 'true'
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: "true"
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
 
       - name: Install Syft
         run: |
@@ -139,7 +139,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.14"
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -247,8 +247,8 @@ jobs:
       - name: Run OWASP ZAP DAST Scan
         uses: zaproxy/action-full-scan@v0.12.0
         with:
-          target: 'http://localhost:${{ env.FLASK_PORT }}'
-          rules_file_name: '.zap/rules.tsv'
+          target: "http://localhost:${{ env.FLASK_PORT }}"
+          rules_file_name: ".zap/rules.tsv"
 
       - name: Stop application container
         if: always()
