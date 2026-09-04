@@ -285,7 +285,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: PiotrSacharuk/various_trainings.gitops
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
           path: gitops
 
       - name: Update Helm values with new image version
