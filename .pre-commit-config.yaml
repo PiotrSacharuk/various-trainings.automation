@@ -19,7 +19,21 @@ repos:
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
-        args: [build, chore, ci, docs, feat, fix, perf, refactor, release, revert, style, test]
+        args:
+          [
+            build,
+            chore,
+            ci,
+            docs,
+            feat,
+            fix,
+            perf,
+            refactor,
+            release,
+            revert,
+            style,
+            test,
+          ]
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.9.4
@@ -32,7 +46,7 @@ repos:
     rev: 26.5.1
     hooks:
       - id: black
-        language_version: python3.14
+        language_version: python3.12
 
   - repo: https://github.com/pycqa/isort
     rev: 9.0.0b5
