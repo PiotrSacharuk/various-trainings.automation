@@ -1,7 +1,7 @@
 FROM python:3.14-slim AS builder
 
 WORKDIR /app
-RUN pip install --upgrade setuptools>=78.1.1
+RUN pip install --no-cache-dir --upgrade setuptools>=78.1.1 msgpack>=1.2.1
 RUN pip install poetry && poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock ./
 RUN poetry install --only=main --no-interaction --no-ansi
