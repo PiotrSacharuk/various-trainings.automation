@@ -1,0 +1,29 @@
+# Local Python environments must never be copied over the image venv built by Poetry.
+.venv/
+venv/
+env/
+ENV/
+
+# Python/runtime artifacts.
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# VCS and local tooling noise.
+.git/
+.gitignore
+.github/
+.pre-commit-config.yaml
+
+# Local/editor files.
+*.swp
+*.swo
+.DS_Store
+.idea/
+.vscode/
